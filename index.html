@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Clone with Persistent Login & Upload Modal</title>
+  <title>YouTube Clone with Channel Page & Persistent Login</title>
   <style>
     * {
       margin: 0;
@@ -214,6 +214,47 @@
     .auth-modal button:hover {
       background-color: #004080;
     }
+
+    /* Channel Page Styles */
+    .channel-page {
+      display: none;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin: 20px auto;
+      width: 50%;
+    }
+
+    .channel-page h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #0056b3;
+    }
+
+    .channel-page .channel-info input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .channel-page .channel-info button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .channel-page .channel-info button:hover {
+      background-color: #004080;
+    }
+
   </style>
 </head>
 <body>
@@ -225,7 +266,6 @@
     <div class="user-icons">
       <button id="authBtn" onclick="openAuthModal()">Login / Sign Up</button>
       <div class="icon-placeholder" id="userIconPlaceholder"></div>
-      <img src="" alt="User Avatar" id="userAvatar" style="display: none;">
       <button id="channelBtn" style="display: none;" onclick="openChannelPage()">Your Channel</button>
     </div>
   </div>
@@ -248,8 +288,6 @@
       <input type="file" id="videoFile" accept="video/*" required>
       <input type="file" id="videoThumbnail" accept="image/*" placeholder="Upload Thumbnail">
       <button type="button" onclick="uploadVideo()">Upload</button>
-
-      <!-- Progress Bar -->
       <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar">0%</div>
       </div>
@@ -257,14 +295,24 @@
     </form>
   </div>
 
-  <!-- Auth Modal for Sign Up / Login -->
+  <!-- Auth Modal -->
   <div class="modal-overlay" id="authModalOverlay" onclick="closeAuthModal()"></div>
   <div class="auth-modal" id="authModal">
-    <h2>Sign Up / Login</h2>
-    <input type="text" id="username" placeholder="Username" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button type="button" onclick="signUp()">Sign Up</button>
-    <button type="button" onclick="login()">Login</button>
+    <h2>Login / Sign Up</h2>
+    <input type="text" id="username" placeholder="Enter Username" required>
+    <input type="password" id="password" placeholder="Enter Password" required>
+    <button onclick="signUp()">Sign Up</button>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- Channel Page -->
+  <div class="channel-page" id="channelPage">
+    <h2>Your Channel</h2>
+    <div class="channel-info">
+      <input type="text" id="channelName" placeholder="Enter Channel Name">
+      <input type="file" id="channelIcon" accept="image/*">
+      <button onclick="saveChannelInfo()">Save Changes</button>
+    </div>
   </div>
 
   <script>
@@ -294,6 +342,15 @@
     function closeAuthModal() {
       document.getElementById('authModal').style.display = 'none';
       document.getElementById('authModalOverlay').style.display = 'none';
+    }
+
+    // Open and Close Channel Page
+    function openChannelPage() {
+      document.getElementById('channelPage').style.display = 'block';
+    }
+
+    function closeChannelPage() {
+      document.getElementById('channelPage').style.display = 'none';
     }
 
     // Handle Sign Up
@@ -403,6 +460,32 @@
     // On page load, check if user is logged in
     window.onload = function () {
       updateUI();
+    }
+
+    // Save Channel Info
+    function saveChannelInfo() {
+      const channelName = document.getElementById('channelName').value;
+      const channelIcon = document.getElementById('channelIcon').files[0];
+
+      if (channelName) {
+        loggedInUser.channelName = channelName;
+      }
+
+      if (channelIcon) {
+        // Handle the channel icon upload (simulate storing it)
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          loggedInUser.channelIcon = e.target.result; // Save base64 version of image
+          localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+          alert('Channel updated successfully!');
+        };
+        reader.readAsDataURL(channelIcon);
+      } else {
+        localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+        alert('Channel updated successfully!');
+      }
+
+      closeChannelPage();
     }
   </script>
 
