@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Clone with Sign-Up, Shorts, Likes/Dislikes, and Video ID</title>
+  <title>YouTube Clone with Your Channel Feature</title>
   <style>
     * {
       margin: 0;
@@ -59,11 +59,17 @@
       background-color: #ffcccc;
     }
 
-    .header .user-icons img {
+    .header .user-icons img, .header .user-icons .icon-placeholder {
       width: 35px;
       height: 35px;
       border-radius: 50%;
       margin-left: 15px;
+      background-color: #ccc;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+      line-height: 35px;
+      display: none;
     }
 
     /* Sidebar Styles */
@@ -228,70 +234,48 @@
       background-color: #ff4d4d;
     }
 
-    /* Login and Signup Form */
-    .form-container {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+    /* Channel Page */
+    .channel-page {
+      margin-left: 220px;
       padding: 20px;
-      background-color: white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-      border-radius: 8px;
-      width: 300px;
     }
 
-    .form-container input {
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    .channel-page h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
     }
 
-    .form-container button {
-      width: 100%;
-      padding: 10px;
-      background-color: #ff0000;
+    .channel-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .channel-info img, .channel-info .icon-placeholder {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: #ccc;
       color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .form-container button:hover {
-      background-color: #ff4d4d;
-    }
-
-    .form-toggle {
-      color: blue;
-      cursor: pointer;
+      font-size: 36px;
       text-align: center;
-      margin-top: 10px;
+      line-height: 80px;
     }
 
-    .form-toggle:hover {
-      text-decoration: underline;
+    .channel-info .channel-details {
+      margin-left: 20px;
     }
 
-    /* Upload Form */
-    .upload-form {
-      display: none;
-      margin: 20px 0;
-    }
-
-    .upload-form input, .upload-form textarea {
+    .channel-info input {
       display: block;
-      margin: 10px 0;
+      margin-top: 10px;
       padding: 10px;
-      width: 100%;
+      width: 200px;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
 
-    .upload-form button {
+    .channel-info button {
       padding: 10px;
       background-color: #ff0000;
       color: white;
@@ -301,7 +285,7 @@
       transition: background-color 0.3s;
     }
 
-    .upload-form button:hover {
+    .channel-info button:hover {
       background-color: #ff4d4d;
     }
   </style>
@@ -314,7 +298,9 @@
     <input type="text" class="search-bar" placeholder="Search videos...">
     <div class="user-icons">
       <button id="authBtn" onclick="openLoginForm()">Login / Sign Up</button>
-      <img src="https://via.placeholder.com/35" alt="User Avatar" id="userAvatar" style="display: none;">
+      <div class="icon-placeholder" id="userIconPlaceholder"></div>
+      <img src="" alt="User Avatar" id="userAvatar" style="display: none;">
+      <button id="channelBtn" style="display: none;" onclick="openChannelPage()">Your Channel</button>
     </div>
   </div>
 
@@ -343,15 +329,22 @@
     </div>
   </div>
 
-  <!-- Video Player -->
-  <div class="video-player" id="videoPlayer">
-    <video controls id="videoElement"></video>
-    <p id="videoDescriptionDisplay"></p>
-    <button class="close-btn" onclick="closeVideo()">Close</button>
+  <!-- Channel Page -->
+  <div class="channel-page" id="channelPage" style="display: none;">
+    <h2>Your Channel</h2>
+    <div class="channel-info">
+      <div class="icon-placeholder" id="channelIconPlaceholder"></div>
+      <img src="" alt="Channel Icon" id="channelIcon" style="display: none;">
+      <div class="channel-details">
+        <input type="text" id="channelName" placeholder="Enter channel name">
+        <input type="file" id="channelIconUpload">
+        <button onclick="updateChannel()">Update Channel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Login and Signup Forms -->
-  <div class="form-container" id="loginForm">
+  <div class="form-container" id="loginForm" style="display: none;">
     <h2>Login</h2>
     <input type="text" id="loginUserId" placeholder="User ID">
     <input type="password" id="loginPassword" placeholder="Password">
@@ -359,7 +352,7 @@
     <div class="form-toggle" onclick="openSignupForm()">Don't have an account? Sign Up</div>
   </div>
 
-  <div class="form-container" id="signupForm">
+  <div class="form-container" id="signupForm" style="display: none;">
     <h2>Sign Up</h2>
     <input type="text" id="signupUsername" placeholder="Username">
     <input type="text" id="signupUserId" placeholder="User ID">
@@ -395,7 +388,7 @@
         if (users.find(user => user.username === username || user.userId === userId)) {
           alert('Username or User ID already taken.');
         } else {
-          users.push({ username, userId, password });
+          users.push({ username, userId, password, channelName: username, channelIcon: '' });
           alert('Sign up successful!');
           openLoginForm();
         }
@@ -414,8 +407,18 @@
       if (user) {
         loggedInUser = user;
         document.getElementById('authBtn').style.display = 'none';
-        document.getElementById('userAvatar').style.display = 'block';
-        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('userAvatar').style.display = 'none';
+        document.getElementById('channelBtn').style.display = 'block';
+        
+        // Display avatar or initial
+        if (user.channelIcon) {
+          document.getElementById('userAvatar').src = user.channelIcon;
+          document.getElementById('userAvatar').style.display = 'block';
+        } else {
+          document.getElementById('userIconPlaceholder').textContent = user.channelName.charAt(0).toUpperCase();
+          document.getElementById('userIconPlaceholder').style.display = 'block';
+        }
+
         alert('Login successful! Welcome ' + user.username);
         document.getElementById('uploadForm').style.display = 'block';
       } else {
@@ -423,9 +426,46 @@
       }
     }
 
-    // Upload video logic (remains the same from the previous version)
+    // Open "Your Channel" page
+    function openChannelPage() {
+      document.querySelector('.main-content').style.display = 'none';
+      document.getElementById('channelPage').style.display = 'block';
 
-    // Video playback, like/dislike logic (remains the same from the previous version)
+      document.getElementById('channelName').value = loggedInUser.channelName;
+
+      if (loggedInUser.channelIcon) {
+        document.getElementById('channelIcon').src = loggedInUser.channelIcon;
+        document.getElementById('channelIcon').style.display = 'block';
+        document.getElementById('channelIconPlaceholder').style.display = 'none';
+      } else {
+        document.getElementById('channelIconPlaceholder').textContent = loggedInUser.channelName.charAt(0).toUpperCase();
+        document.getElementById('channelIconPlaceholder').style.display = 'block';
+        document.getElementById('channelIcon').style.display = 'none';
+      }
+    }
+
+    // Update Channel Details
+    function updateChannel() {
+      const newChannelName = document.getElementById('channelName').value;
+      const channelIconUpload = document.getElementById('channelIconUpload').files[0];
+
+      if (newChannelName) {
+        loggedInUser.channelName = newChannelName;
+      }
+
+      if (channelIconUpload) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          loggedInUser.channelIcon = e.target.result;
+          document.getElementById('channelIcon').src = e.target.result;
+          document.getElementById('channelIcon').style.display = 'block';
+          document.getElementById('channelIconPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(channelIconUpload);
+      }
+
+      alert('Channel updated successfully!');
+    }
   </script>
 
 </body>
