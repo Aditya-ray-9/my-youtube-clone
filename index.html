@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Clone with Channel Page & Persistent Login</title>
+  <title>MasterTube</title>
   <style>
     * {
       margin: 0;
@@ -13,10 +13,11 @@
 
     body {
       font-family: 'Arial', sans-serif;
-      background-color: #f0f2f5;
+      background-color: #e3f2fd;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
     }
 
-    /* Header Styles */
     .header {
       display: flex;
       justify-content: space-between;
@@ -25,6 +26,7 @@
       background-color: #0056b3;
       color: white;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
     .header .logo {
@@ -34,10 +36,11 @@
 
     .header .search-bar {
       width: 50%;
-      padding: 8px;
+      padding: 10px;
       font-size: 16px;
       border-radius: 20px;
-      border: none;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .header .user-icons {
@@ -59,17 +62,25 @@
       background-color: #99ccff;
     }
 
-    /* Main Content Styles */
-    .main-content {
-      margin: 20px;
+    .header .user-icons .icon-placeholder {
       display: flex;
+      align-items: center;
       justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: white;
+      color: #0056b3;
+      font-weight: bold;
+      font-size: 18px;
+      margin-left: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    /* Upload Button at Bottom Right */
     .upload-btn {
       position: fixed;
-      bottom: 20px;
+      bottom: 80px;
       right: 20px;
       background-color: #0056b3;
       color: white;
@@ -86,8 +97,24 @@
       background-color: #004080;
     }
 
-    /* Upload Modal Styles */
-    .upload-modal {
+    .channel-btn {
+      position: fixed;
+      bottom: 140px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #0056b3;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .upload-modal, .channel-page, .settings-modal {
       display: none;
       position: fixed;
       top: 50%;
@@ -101,13 +128,13 @@
       z-index: 1000;
     }
 
-    .upload-modal h2 {
+    .upload-modal h2, .channel-page h2, .settings-modal h2 {
       font-size: 24px;
       margin-bottom: 20px;
       color: #0056b3;
     }
 
-    .upload-form input, .upload-form textarea {
+    .upload-form input, .upload-form textarea, .channel-page input {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
@@ -116,11 +143,7 @@
       font-size: 16px;
     }
 
-    .upload-form input[type="file"] {
-      padding: 5px;
-    }
-
-    .upload-form button {
+    .upload-form button, .channel-page button {
       padding: 12px;
       width: 100%;
       background-color: #0056b3;
@@ -133,7 +156,7 @@
       transition: background-color 0.3s;
     }
 
-    .upload-form button:hover {
+    .upload-form button:hover, .channel-page button:hover {
       background-color: #004080;
     }
 
@@ -160,7 +183,6 @@
       text-align: center;
     }
 
-    /* Modal Overlay */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -172,7 +194,6 @@
       z-index: 999;
     }
 
-    /* Auth Modal */
     .auth-modal {
       display: none;
       position: fixed;
@@ -215,87 +236,73 @@
       background-color: #004080;
     }
 
-    /* Channel Page Styles */
-    .channel-page {
-      display: none;
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-      margin: 20px auto;
-      width: 50%;
-    }
-
-    .channel-page h2 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #0056b3;
-    }
-
-    .channel-page .channel-info input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-
-    .channel-page .channel-info button {
-      width: 100%;
-      padding: 12px;
+    .settings-btn {
+      position: fixed;
+      bottom: 200px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
       background-color: #0056b3;
       color: white;
-      border: none;
-      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .channel-page .channel-info button:hover {
+    .settings-btn:hover {
       background-color: #004080;
     }
 
+    .theme-button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    .theme-button:hover {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
-
-  <!-- Header -->
   <div class="header">
-    <div class="logo">MyTube</div>
-    <input type="text" class="search-bar" placeholder="Search videos...">
+    <div class="logo">MasterTube</div>
+    <input type="text" class="search-bar" placeholder="Search...">
     <div class="user-icons">
       <button id="authBtn" onclick="openAuthModal()">Login / Sign Up</button>
-      <div class="icon-placeholder" id="userIconPlaceholder"></div>
-      <button id="channelBtn" style="display: none;" onclick="openChannelPage()">Your Channel</button>
+      <div id="channelBtn" class="icon-placeholder" onclick="openChannelPage()">C</div>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Other content goes here -->
-  </div>
+  <button class="upload-btn" onclick="openUploadModal()">Upload Video</button>
 
-  <!-- Upload Button at Bottom Right -->
-  <button class="upload-btn" id="uploadBtn" onclick="openUploadModal()">Upload</button>
+  <div class="settings-btn" onclick="openSettingsModal()">⚙️</div>
 
-  <!-- Upload Modal -->
-  <div class="modal-overlay" id="modalOverlay" onclick="closeUploadModal()"></div>
+  <div class="modal-overlay" id="uploadModalOverlay" onclick="closeUploadModal()"></div>
   <div class="upload-modal" id="uploadModal">
     <h2>Upload Video</h2>
     <form class="upload-form">
       <input type="text" id="videoTitle" placeholder="Video Title" required>
-      <textarea id="videoDescription" placeholder="Enter video description" required></textarea>
+      <textarea id="videoDescription" placeholder="Video Description" rows="4" required></textarea>
       <input type="file" id="videoFile" accept="video/*" required>
-      <input type="file" id="videoThumbnail" accept="image/*" placeholder="Upload Thumbnail">
+      <input type="file" id="videoThumbnail" accept="image/*">
       <button type="button" onclick="uploadVideo()">Upload</button>
       <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar">0%</div>
       </div>
       <div class="progress-percentage" id="progressPercentage">0%</div>
     </form>
+    <button onclick="closeUploadModal()">Close</button>
   </div>
 
-  <!-- Auth Modal -->
   <div class="modal-overlay" id="authModalOverlay" onclick="closeAuthModal()"></div>
   <div class="auth-modal" id="authModal">
     <h2>Login / Sign Up</h2>
@@ -305,7 +312,6 @@
     <button onclick="login()">Login</button>
   </div>
 
-  <!-- Channel Page -->
   <div class="channel-page" id="channelPage">
     <h2>Your Channel</h2>
     <div class="channel-info">
@@ -313,16 +319,43 @@
       <input type="file" id="channelIcon" accept="image/*">
       <button onclick="saveChannelInfo()">Save Changes</button>
     </div>
+    <button onclick="closeChannelPage()">Close</button>
+  </div>
+
+  <div class="modal-overlay" id="settingsModalOverlay" onclick="closeSettingsModal()"></div>
+  <div class="settings-modal" id="settingsModal">
+    <h2>Settings</h2>
+    <button class="theme-button" onclick="changeTheme('blue')">Blue</button>
+    <button class="theme-button" onclick="changeTheme('red')">Red</button>
+    <button class="theme-button" onclick="changeTheme('orange')">Orange</button>
+    <button class="theme-button" onclick="changeTheme('green')">Green</button>
+    <button class="theme-button" onclick="changeTheme('purple')">Purple</button>
+    <button onclick="closeSettingsModal()">Close</button>
   </div>
 
   <script>
-    let loggedInUser = null; // Simulate logged-in user
+    let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || null;
+    let theme = localStorage.getItem('theme') || 'blue';
 
-    // Open and Close Upload Modal
+    function applyTheme(themeColor) {
+      document.body.style.backgroundColor = themeColor === 'blue' ? '#e3f2fd' :
+                                            themeColor === 'red' ? '#ffebee' :
+                                            themeColor === 'orange' ? '#fff3e0' :
+                                            themeColor === 'green' ? '#e8f5e9' :
+                                            themeColor === 'purple' ? '#f3e5f5' : '#e3f2fd';
+      document.querySelectorAll('.header, .upload-btn, .channel-btn, .settings-btn').forEach(el => {
+        el.style.backgroundColor = themeColor;
+      });
+      document.querySelectorAll('.auth-modal button, .upload-form button, .channel-page button').forEach(el => {
+        el.style.backgroundColor = themeColor;
+      });
+      localStorage.setItem('theme', themeColor);
+    }
+
     function openUploadModal() {
       if (loggedInUser) {
         document.getElementById('uploadModal').style.display = 'block';
-        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('uploadModalOverlay').style.display = 'block';
       } else {
         alert('Please log in to upload a video.');
       }
@@ -330,10 +363,9 @@
 
     function closeUploadModal() {
       document.getElementById('uploadModal').style.display = 'none';
-      document.getElementById('modalOverlay').style.display = 'none';
+      document.getElementById('uploadModalOverlay').style.display = 'none';
     }
 
-    // Open and Close Auth Modal (Sign Up / Login)
     function openAuthModal() {
       document.getElementById('authModal').style.display = 'block';
       document.getElementById('authModalOverlay').style.display = 'block';
@@ -344,16 +376,28 @@
       document.getElementById('authModalOverlay').style.display = 'none';
     }
 
-    // Open and Close Channel Page
     function openChannelPage() {
-      document.getElementById('channelPage').style.display = 'block';
+      if (loggedInUser) {
+        document.getElementById('channelPage').style.display = 'block';
+      } else {
+        alert('Please log in to access your channel.');
+      }
     }
 
     function closeChannelPage() {
       document.getElementById('channelPage').style.display = 'none';
     }
 
-    // Handle Sign Up
+    function openSettingsModal() {
+      document.getElementById('settingsModal').style.display = 'block';
+      document.getElementById('settingsModalOverlay').style.display = 'block';
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').style.display = 'none';
+      document.getElementById('settingsModalOverlay').style.display = 'none';
+    }
+
     function signUp() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
@@ -368,13 +412,11 @@
         return;
       }
 
-      // Save user to localStorage
       localStorage.setItem(username, JSON.stringify({ username, password }));
       alert('Sign-up successful! Please login now.');
       closeAuthModal();
     }
 
-    // Handle Login
     function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
@@ -398,33 +440,30 @@
 
       loggedInUser = userData;
       localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-      alert('Login successful!');
       updateUI();
       closeAuthModal();
     }
 
-    // Handle Logout
     function logout() {
       loggedInUser = null;
       localStorage.removeItem('loggedInUser');
       updateUI();
     }
 
-    // Update UI on login/logout
     function updateUI() {
       const user = JSON.parse(localStorage.getItem('loggedInUser'));
       if (user) {
         loggedInUser = user;
         document.getElementById('authBtn').style.display = 'none';
         document.getElementById('channelBtn').style.display = 'inline-block';
-        document.getElementById('userIconPlaceholder').textContent = user.username[0].toUpperCase();
+        document.getElementById('channelBtn').textContent = user.username[0].toUpperCase();
+        document.getElementById('channelBtn').style.backgroundColor = theme;
       } else {
         document.getElementById('authBtn').style.display = 'inline-block';
         document.getElementById('channelBtn').style.display = 'none';
       }
     }
 
-    // Simulate Video Upload
     function uploadVideo() {
       const videoTitle = document.getElementById('videoTitle').value;
       const videoDescription = document.getElementById('videoDescription').value;
@@ -436,58 +475,53 @@
         return;
       }
 
-      // Simulate video upload progress
       let progress = 0;
-      const progressBar = document.getElementById('progressBar');
-      const progressPercentage = document.getElementById('progressPercentage');
-
-      const uploadInterval = setInterval(() => {
+      const interval = setInterval(() => {
+        progress += 10;
+        document.getElementById('progressBar').style.width = progress + '%';
+        document.getElementById('progressBar').textContent = progress + '%';
+        document.getElementById('progressPercentage').textContent = progress + '%';
         if (progress >= 100) {
-          clearInterval(uploadInterval);
+          clearInterval(interval);
           alert('Video uploaded successfully!');
           closeUploadModal();
-        } else {
-          progress += Math.random() * 10;
-          if (progress > 100) progress = 100;
-
-          progressBar.style.width = progress + '%';
-          progressBar.textContent = Math.floor(progress) + '%';
-          progressPercentage.textContent = Math.floor(progress) + '%';
         }
       }, 300);
     }
 
-    // On page load, check if user is logged in
-    window.onload = function () {
-      updateUI();
+    function likeVideo() {
+      alert('Liked!');
     }
 
-    // Save Channel Info
+    function unlikeVideo() {
+      alert('Unliked!');
+    }
+
+    function shareVideo() {
+      alert('Shared!');
+    }
+
     function saveChannelInfo() {
       const channelName = document.getElementById('channelName').value;
       const channelIcon = document.getElementById('channelIcon').files[0];
 
-      if (channelName) {
-        loggedInUser.channelName = channelName;
+      if (!channelName) {
+        alert('Please enter a channel name.');
+        return;
       }
 
-      if (channelIcon) {
-        // Handle the channel icon upload (simulate storing it)
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          loggedInUser.channelIcon = e.target.result; // Save base64 version of image
-          localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-          alert('Channel updated successfully!');
-        };
-        reader.readAsDataURL(channelIcon);
-      } else {
-        localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-        alert('Channel updated successfully!');
-      }
-
+      alert('Channel info saved successfully!');
       closeChannelPage();
     }
-  </script>
 
+    function changeTheme(color) {
+      applyTheme(color);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(theme);
+      updateUI();
+    });
+  </script>
 </body>
 </html>
