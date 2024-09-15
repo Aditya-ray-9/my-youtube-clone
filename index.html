@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Clone with Upload and Login</title>
+  <title>YouTube Clone with Shorts, Likes/Dislikes, and Video ID</title>
   <style>
     * {
       margin: 0;
@@ -106,6 +106,53 @@
       color: #666;
     }
 
+    .like-dislike {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+
+    .like-dislike button {
+      cursor: pointer;
+      padding: 5px 10px;
+      background-color: lightgray;
+      border: none;
+      border-radius: 4px;
+    }
+
+    /* Shorts Section */
+    .shorts-section {
+      margin-top: 40px;
+    }
+
+    .shorts-section h2 {
+      margin-bottom: 10px;
+    }
+
+    .short-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+    }
+
+    .short-thumbnail {
+      background-color: #f0f0f0;
+      border-radius: 12px;
+      padding: 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .short-thumbnail img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .short-thumbnail:hover {
+      transform: scale(1.05);
+    }
+
     /* Video Player */
     .video-player {
       display: none;
@@ -199,6 +246,14 @@
       <!-- Uploaded videos will appear here -->
     </div>
 
+    <!-- Shorts Section -->
+    <div class="shorts-section">
+      <h2>Shorts</h2>
+      <div class="short-grid" id="shortGrid">
+        <!-- Uploaded shorts will appear here -->
+      </div>
+    </div>
+
     <!-- Upload Form -->
     <div class="upload-form" id="uploadForm">
       <h3>Upload Video</h3>
@@ -225,6 +280,7 @@
 
   <script>
     let isLoggedIn = false;
+    let videoIdCounter = 1;  // Counter to create unique video IDs
 
     function openLoginForm() {
       document.getElementById('loginForm').style.display = 'block';
@@ -254,27 +310,51 @@
       }
     }
 
+    function generateVideoId() {
+      return 'v' + (videoIdCounter++);
+    }
+
     function uploadVideo() {
       const videoFile = document.getElementById('videoFile').files[0];
       const videoDescription = document.getElementById('videoDescription').value;
 
       if (videoFile && videoDescription) {
         const videoURL = URL.createObjectURL(videoFile);
+        const videoId = generateVideoId();
         const videoGrid = document.getElementById('videoGrid');
+        const shortGrid = document.getElementById('shortGrid');
 
-        const newVideo = document.createElement('div');
-        newVideo.classList.add('video-thumbnail');
-        newVideo.onclick = () => playVideo(videoURL, videoDescription);
+        const videoElement = document.createElement('video');
+        videoElement.src = videoURL;
 
-        newVideo.innerHTML = `
-          <img src="https://via.placeholder.com/250x140" alt="Uploaded Video">
-          <h4>${videoFile.name}</h4>
-          <p>${videoDescription}</p>
-        `;
+        videoElement.onloadedmetadata = function() {
+          const isShort = videoElement.duration < 60 && videoElement.videoHeight > videoElement.videoWidth;
 
-        videoGrid.appendChild(newVideo);
-        document.getElementById('uploadForm').style.display = 'none';
-        alert('Video uploaded successfully!');
+          const newVideo = document.createElement('div');
+          newVideo.classList.add('video-thumbnail');
+          newVideo.onclick = () => playVideo(videoURL, videoDescription);
+
+          newVideo.innerHTML = `
+            <img src="https://via.placeholder.com/250x140" alt="Uploaded Video">
+            <h4>${videoFile.name} (ID: ${videoId})</h4>
+            <p>${videoDescription}</p>
+            <div class="like-dislike">
+              <button onclick="likeVideo('${videoId}', event)">Like <span id="like-${videoId}">0</span></button>
+              <button onclick="dislikeVideo('${videoId}', event)">Dislike <span id="dislike-${videoId}">0</span></button>
+            </div>
+          `;
+
+          if (isShort) {
+            newVideo.classList.remove('video-thumbnail');
+            newVideo.classList.add('short-thumbnail');
+            shortGrid.appendChild(newVideo);
+          } else {
+            videoGrid.appendChild(newVideo);
+          }
+
+          document.getElementById('uploadForm').style.display = 'none';
+          alert('Video uploaded successfully!');
+        };
       } else {
         alert('Please select a video and enter a description.');
       }
@@ -296,6 +376,18 @@
 
       videoElement.pause();
       videoPlayer.style.display = 'none';
+    }
+
+    function likeVideo(videoId, event) {
+      const likeCount = document.getElementById(`like-${videoId}`);
+      likeCount.textContent = parseInt(likeCount.textContent) + 1;
+      event.stopPropagation();
+    }
+
+    function dislikeVideo(videoId, event) {
+      const dislikeCount = document.getElementById(`dislike-${videoId}`);
+      dislikeCount.textContent = parseInt(dislikeCount.textContent) + 1;
+      event.stopPropagation();
     }
   </script>
 
