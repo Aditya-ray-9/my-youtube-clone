@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Clone with Upload and Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    /* Header Styles */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #ff0000;
+      color: white;
+    }
+
+    .header .logo {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .header .search-bar {
+      width: 50%;
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    .header .user-icons {
+      display: flex;
+      align-items: center;
+    }
+
+    .header .user-icons img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      margin-left: 15px;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: 200px;
+      background-color: #f9f9f9;
+      padding: 20px;
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 0;
+      color: black;
+      text-decoration: none;
+    }
+
+    .sidebar a:hover {
+      background-color: #ddd;
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      margin-left: 220px;
+      padding: 20px;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .video-thumbnail {
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .video-thumbnail:hover {
+      transform: scale(1.05);
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .video-thumbnail h4 {
+      margin: 10px 0 5px;
+    }
+
+    .video-thumbnail p {
+      color: #666;
+    }
+
+    /* Video Player */
+    .video-player {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 800px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .video-player video {
+      width: 100%;
+      height: auto;
+    }
+
+    .video-player .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #ff0000;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    /* Login Form */
+    .login-form {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+    }
+
+    .login-form input {
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+    }
+
+    /* Upload Form */
+    .upload-form {
+      display: none;
+      margin: 20px 0;
+    }
+
+    .upload-form input, .upload-form textarea {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">MyTube</div>
+    <input type="text" class="search-bar" placeholder="Search videos...">
+    <div class="user-icons">
+      <button onclick="openLoginForm()" id="loginBtn">Login</button>
+      <img src="https://via.placeholder.com/35" alt="User Avatar" id="userAvatar" style="display: none;">
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="#">Home</a>
+    <a href="#">Trending</a>
+    <a href="#">Subscriptions</a>
+    <a href="#">Library</a>
+    <a href="#" id="uploadLink" style="display: none;" onclick="showUploadForm()">Upload Video</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h2>Recommended Videos</h2>
+    <div class="video-grid" id="videoGrid">
+      <!-- Uploaded videos will appear here -->
+    </div>
+
+    <!-- Upload Form -->
+    <div class="upload-form" id="uploadForm">
+      <h3>Upload Video</h3>
+      <input type="file" id="videoFile" accept="video/*">
+      <textarea id="videoDescription" rows="4" placeholder="Enter video description..."></textarea>
+      <button onclick="uploadVideo()">Upload</button>
+    </div>
+  </div>
+
+  <!-- Login Form -->
+  <div class="login-form" id="loginForm">
+    <h3>Login</h3>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- Video Player Modal -->
+  <div class="video-player" id="videoPlayer">
+    <button class="close-btn" onclick="closeVideo()">X</button>
+    <video id="videoElement" controls></video>
+    <p id="videoDescriptionDisplay"></p>
+  </div>
+
+  <script>
+    let isLoggedIn = false;
+
+    function openLoginForm() {
+      document.getElementById('loginForm').style.display = 'block';
+    }
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (username === 'admin' && password === 'password') { // Simulated login
+        isLoggedIn = true;
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('loginBtn').style.display = 'none';
+        document.getElementById('userAvatar').style.display = 'block';
+        document.getElementById('uploadLink').style.display = 'block';
+        alert('Login successful!');
+      } else {
+        alert('Invalid login credentials.');
+      }
+    }
+
+    function showUploadForm() {
+      if (isLoggedIn) {
+        document.getElementById('uploadForm').style.display = 'block';
+      } else {
+        alert('Please login to upload videos.');
+      }
+    }
+
+    function uploadVideo() {
+      const videoFile = document.getElementById('videoFile').files[0];
+      const videoDescription = document.getElementById('videoDescription').value;
+
+      if (videoFile && videoDescription) {
+        const videoURL = URL.createObjectURL(videoFile);
+        const videoGrid = document.getElementById('videoGrid');
+
+        const newVideo = document.createElement('div');
+        newVideo.classList.add('video-thumbnail');
+        newVideo.onclick = () => playVideo(videoURL, videoDescription);
+
+        newVideo.innerHTML = `
+          <img src="https://via.placeholder.com/250x140" alt="Uploaded Video">
+          <h4>${videoFile.name}</h4>
+          <p>${videoDescription}</p>
+        `;
+
+        videoGrid.appendChild(newVideo);
+        document.getElementById('uploadForm').style.display = 'none';
+        alert('Video uploaded successfully!');
+      } else {
+        alert('Please select a video and enter a description.');
+      }
+    }
+
+    function playVideo(videoSrc, description) {
+      const videoPlayer = document.getElementById('videoPlayer');
+      const videoElement = document.getElementById('videoElement');
+      const videoDescriptionDisplay = document.getElementById('videoDescriptionDisplay');
+
+      videoElement.src = videoSrc;
+      videoDescriptionDisplay.textContent = description;
+      videoPlayer.style.display = 'block';
+    }
+
+    function closeVideo() {
+      const videoPlayer = document.getElementById('videoPlayer');
+      const videoElement = document.getElementById('videoElement');
+
+      videoElement.pause();
+      videoPlayer.style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
